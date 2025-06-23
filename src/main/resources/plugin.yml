@@ -1,0 +1,5 @@
+name: drawers
+version: '${project.version}'
+main: com.funnyboyroks.drawers.Drawers
+api-version: 1.19
+authors: [funnyboy_roks]
