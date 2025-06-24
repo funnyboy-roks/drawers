@@ -1,7 +1,10 @@
 package com.funnyboyroks.drawers;
 
+import java.util.Arrays;
 import java.util.Optional;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
@@ -13,9 +16,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.HopperInventorySearchEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -55,8 +60,7 @@ public class Listeners implements Listener {
         Directional dir = (Directional) block.getBlockData();
         // TODO: Perhaps set open when the drawer has an item
 
-        Vector facingVec = dir.getFacing().getDirection();
-        ItemDisplay item = block.getWorld().spawn(block.getLocation().add(0.5, 10f/16f, 0.5), ItemDisplay.class, entity -> {
+        ItemDisplay item = block.getWorld().spawn(block.getLocation().add(0.5, 0.5, 0.5), ItemDisplay.class, entity -> {
             // entity.setItemStack(event.getPlayer().getInventory().getItemInOffHand());
             // TODO: entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             entity.setBrightness(new Brightness(15, 15));
@@ -64,18 +68,18 @@ public class Listeners implements Listener {
             entity.setTransformationMatrix(
                 new Matrix4f()
                     .rotate(ANGLES[dir.getFacing().ordinal()])
-                    .translate(0f, 0f, -0.5f)
+                    .translate(0f, 2f/16f, -0.5f)
                     .scale(
                         new Vector3f(
-                            facingVec.getX() == 0 ? 8f/16f : 0.1f,
-                            facingVec.getY() == 0 ? 8f/16f : 0.1f,
-                            facingVec.getZ() == 0 ? 8f/16f : 0.1f
+                            8f/16f,
+                            8f/16f,
+                            0.1f
                         )
                     )
             );
         });
 
-        TextDisplay text = block.getWorld().spawn(block.getLocation().add(0.5, 2f/16f, 0.5), TextDisplay.class, entity -> {
+        TextDisplay text = block.getWorld().spawn(block.getLocation().add(0.5, 0.5, 0.5), TextDisplay.class, entity -> {
             // entity.text(Component.text("Empty"));
             entity.setBrightness(new Brightness(15, 15));
             entity.setBackgroundColor(org.bukkit.Color.fromARGB(0));
@@ -83,8 +87,8 @@ public class Listeners implements Listener {
             entity.setTransformationMatrix(
                 new Matrix4f()
                     .rotate(OPPOSING_ANGLES[dir.getFacing().ordinal()])
-                    .translate(0f, 0f, 0.5f)
-                    .scale(0.75f) // 3px?
+                    .translate(0f, -6f/16f, 0.5f)
+                    .scale(0.75f)
             );
         });
 

@@ -5,7 +5,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
