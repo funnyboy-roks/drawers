@@ -20,7 +20,8 @@ import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import net.kyori.adventure.text.Component;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 
 public class Listeners implements Listener {
 
@@ -47,6 +48,9 @@ public class Listeners implements Listener {
         Block block = event.getBlock();
 
         if (block.getType() != Material.BARREL) return;
+
+        CustomModelData modelData = event.getItemInHand().getData(DataComponentTypes.CUSTOM_MODEL_DATA);
+        if (modelData == null || !modelData.strings().contains(Util.ns("barrel").toString())) return;
 
         Directional dir = (Directional) block.getBlockData();
         // TODO: Perhaps set open when the drawer has an item
