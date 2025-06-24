@@ -141,4 +141,61 @@ public class Listeners implements Listener {
             event.setCancelled(true);
         }
     }
+
+    @EventHandler
+    public void onInventoryMove(InventoryMoveItemEvent event) {
+        Inventory dest = event.getDestination();
+        Location destLoc = dest.getLocation();
+        if (destLoc != null) {
+            Block block = destLoc.getBlock();
+            if (block != null && block.getType() == Material.BARREL) {
+                Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
+                if (optDrawer.isPresent()) {
+                    DrawerBlock drawer = optDrawer.get(); // Checked above
+                    if (drawer.add(event.getItem())) {
+                        // remove the item, but not add it to dest inventory
+                        event.setItem(new ItemStack(Material.AIR));
+                        drawer.saveData();
+                        drawer.updateDisplay();
+                    } else {
+                        event.setCancelled(true);
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Dest is not a drawer, but source might be
+        Inventory src = event.getSource();
+        Location srcLoc = src.getLocation();
+        if (srcLoc != null) {
+            Block block = srcLoc.getBlock();
+            if (block != null && block.getType() == Material.BARREL) {
+                Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
+                if (optDrawer.isPresent()) {
+                    DrawerBlock drawer = optDrawer.get(); // Checked above
+                    if (dest.firstEmpty() == -1 && Arrays.stream(dest.getContents()).noneMatch(stack -> stack.getAmount() < stack.getMaxStackSize())) return;
+                    drawer.removeItem(false);
+                    drawer.saveData();
+                    drawer.updateDisplay();
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onHopperSearch(HopperInventorySearchEvent event) {
+        Block block = event.getSearchBlock();
+        if (block == null || block.getType() != Material.BARREL) return;
+
+        Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
+        if (optDrawer.isEmpty()) return;
+        DrawerBlock drawer = optDrawer.get(); // Checked above
+
+        Inventory newInv = Bukkit.createInventory(event.getInventory().getHolder(), 9);
+        if (!drawer.isEmpty()) {
+            newInv.setItem(0, drawer.state.item().asOne());
+        }
+        event.setInventory(newInv);
+    }
 }
