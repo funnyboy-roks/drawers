@@ -22,6 +22,7 @@ mvn package
     - Breaking on the sides should work
     - Breaking from the front should drop items
 - No way to open gui, no matter what
+- Vertical drawers working
 
 ## TODO (future)
 
