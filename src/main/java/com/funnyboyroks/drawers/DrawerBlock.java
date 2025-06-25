@@ -66,7 +66,7 @@ public class DrawerBlock {
             int newCount = this.state.count() + stack.getAmount();
             int maxCap = this.maxCount();
             ItemStack overflow = null;
-            if (newCount > maxCap) {
+            if (newCount > maxCap && !this.state.voidExcess()) {
                 int overflowQty = newCount % maxCap;
                 overflow = stack.asQuantity(overflowQty);
             }
@@ -199,27 +199,24 @@ public class DrawerBlock {
         }
     }
 
-    public static record DrawerState(@Nullable ItemStack item, int count) {
+    public static record DrawerState(@Nullable ItemStack item, int count, boolean voidExcess) {
         public DrawerState() {
-            this(null, 0);
+            this(null, 0, false);
         }
 
         public DrawerState withCount(int count) {
-            return new DrawerState(this.item(), count);
+            return new DrawerState(this.item(), count, this.voidExcess());
         }
 
         public DrawerState withItem(@Nullable ItemStack stack) {
-            return new DrawerState(stack, this.count());
+            return new DrawerState(stack, this.count(), this.voidExcess());
         }
 
         public void toPdc(@NotNull PersistentDataContainer pdc) {
             // TODO: Better itemstack ser/de
-            if (this.item() == null) {
-                pdc.set(Util.ns("item_stack"), PersistentDataType.BYTE_ARRAY, new byte[0]);
-            } else {
-                pdc.set(Util.ns("item_stack"), PersistentDataType.BYTE_ARRAY, this.item().serializeAsBytes());
-            }
-            pdc.set(Util.ns("count"), PersistentDataType.INTEGER, this.count());
+            if (this.item() != null) pdc.set(Util.ns("item_stack"), PersistentDataType.BYTE_ARRAY, this.item().serializeAsBytes());
+            if (this.count() != 0) pdc.set(Util.ns("count"), PersistentDataType.INTEGER, this.count());
+            if (this.voidExcess()) pdc.set(Util.ns("void"), PersistentDataType.BOOLEAN, true);
         }
 
         public static @NotNull DrawerState fromPdc(@NotNull PersistentDataContainer pdc) {
@@ -234,7 +231,8 @@ public class DrawerBlock {
             }
             return new DrawerState(
                 item,
-                pdc.getOrDefault(Util.ns("count"), PersistentDataType.INTEGER, 0)
+                pdc.getOrDefault(Util.ns("count"), PersistentDataType.INTEGER, 0),
+                pdc.getOrDefault(Util.ns("void"), PersistentDataType.BOOLEAN, false)
             );
         }
     }
