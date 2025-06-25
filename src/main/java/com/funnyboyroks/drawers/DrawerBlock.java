@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Barrel;
@@ -45,16 +46,33 @@ public class DrawerBlock {
         return !this.hasType() || this.state.count() == 0;
     }
 
-    public boolean add(ItemStack stack) {
+    // Capacity in _stacks_
+    public int capacity() {
+        return 32;
+    }
+
+    public int maxCount() {
+        return this.state.item().getMaxStackSize() * this.capacity();
+    }
+
+    public @NotNull Optional<ItemStack> add(ItemStack stack) {
         if (this.hasType()) {
-            if (!stack.isSimilar(this.state.item())) return false;
-            this.state = this.state.withCount(this.state.count() + stack.getAmount());
+            if (!stack.isSimilar(this.state.item()) || this.state.count() > this.maxCount()) return Optional.of(stack);
+            int newCount = this.state.count() + stack.getAmount();
+            int maxCap = this.maxCount();
+            ItemStack overflow = null;
+            if (newCount > maxCap) {
+                int overflowQty = newCount % maxCap;
+                overflow = stack.asQuantity(overflowQty);
+            }
+            this.state = this.state.withCount(Math.max(this.state.count(), Math.min(newCount, maxCap)));
+            return Optional.ofNullable(overflow);
         } else {
             this.state = this.state
                 .withItem(stack.clone())
                 .withCount(stack.getAmount());
+            return Optional.empty();
         }
-        return true;
     }
 
     public @Nullable ItemStack removeItem(boolean fullStack) {
@@ -147,6 +165,22 @@ public class DrawerBlock {
         DrawerState state = DrawerState.fromPdc(pdc);
 
         return Optional.of(new DrawerBlock(block, itemDisplay, textDisplay, state));
+    }
+
+    public void dropContents() {
+        if (this.isEmpty()) return;
+        int stackSize = this.state.item().getMaxStackSize();
+        int stacks = this.state.count() / stackSize;
+
+        Location summonAt = this.block.getLocation().clone().add(0.5, 0.5, 0.5);
+        ItemStack fullStack = this.state.item().asQuantity(stackSize);
+        for (int i = 0; i < stacks; ++i) {
+            this.block.getWorld().dropItemNaturally(summonAt, fullStack);
+        }
+
+        if (this.state.count() % stackSize != 0) {
+            this.block.getWorld().dropItemNaturally(summonAt, fullStack.asQuantity(this.state.count() % stackSize));
+        }
     }
 
     public static record DrawerState(@Nullable ItemStack item, int count) {

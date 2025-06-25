@@ -17,15 +17,18 @@ mvn package
 
 ## TODO (First release)
 
-- Max capacity
-- Breaking drops contents
-    - Breaking on the sides should work
-    - Breaking from the front should drop items
-- No way to open gui, no matter what
-- Vertical drawers working
+- [x] Max capacity
+- [x] Explosion breaks block
+- [x] Breaking drops contents
+    - [x] Breaking on the sides should work
+    - [x] Breaking from the front should drop items
+- [x] No way to open gui, no matter what
+- [ ] Vertical drawers working
+- [ ] Config for max capacity
 
 ## TODO (future)
 
-- Upgrades (i.e., iron, diamond, etc)
-- Void Upgrade (cactus)
-- Upgrade GUI
+- [ ] Upgrades (i.e., iron, diamond, etc)
+- [ ] Void Upgrade (cactus)
+- [ ] Upgrade GUI
+- [ ] Infinite drawers

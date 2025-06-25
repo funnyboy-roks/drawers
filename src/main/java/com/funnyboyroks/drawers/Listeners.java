@@ -15,7 +15,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.inventory.HopperInventorySearchEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -105,9 +107,40 @@ public class Listeners implements Listener {
         Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
         if (optDrawer.isEmpty()) return;
         DrawerBlock drawer = optDrawer.get(); // Checked above
+        drawer.dropContents();
 
         Util.tryRemoveEntity(drawer.itemDisplay);
         Util.tryRemoveEntity(drawer.textDisplay);
+    }
+
+    @EventHandler
+    public void onBlockExplode(BlockExplodeEvent event) {
+        for (Block block : event.blockList()) {
+            if (block.getType() != Material.BARREL) return;
+
+            Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
+            if (optDrawer.isEmpty()) return;
+            DrawerBlock drawer = optDrawer.get(); // Checked above
+            drawer.dropContents();
+
+            Util.tryRemoveEntity(drawer.itemDisplay);
+            Util.tryRemoveEntity(drawer.textDisplay);
+        }
+    }
+
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        for (Block block : event.blockList()) {
+            if (block.getType() != Material.BARREL) return;
+
+            Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
+            if (optDrawer.isEmpty()) return;
+            DrawerBlock drawer = optDrawer.get(); // Checked above
+            drawer.dropContents();
+
+            Util.tryRemoveEntity(drawer.itemDisplay);
+            Util.tryRemoveEntity(drawer.textDisplay);
+        }
     }
 
     @EventHandler
@@ -120,18 +153,20 @@ public class Listeners implements Listener {
         DrawerBlock drawer = optDrawer.get(); // Checked above
 
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (event.getPlayer().isSneaking()) return;
-            // add a single item
             ItemStack is = event.getItem();
+            if (event.getPlayer().isSneaking() && is != null) return;
+            // add a single item
             // TODO: drawer max capacity
-            if (is != null && drawer.add(is)) {
-                event.getPlayer().getInventory().setItem(event.getHand(), null);
+            if (event.getBlockFace() == drawer.getBlockData().getFacing() && is != null) {
+                Optional<ItemStack> overflowOpt = drawer.add(is);
+                event.getPlayer().getInventory().setItem(event.getHand(), overflowOpt.isPresent() ? overflowOpt.get() : null);
                 drawer.saveData();
                 drawer.updateDisplay();
             }
             event.setCancelled(true);
         } else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
             if (drawer.isEmpty()) return;
+            if (event.getBlockFace() != drawer.getBlockData().getFacing()) return;
             ItemStack stack = drawer.removeItem(event.getPlayer().isSneaking());
             if (stack != null) {
                 event.getPlayer().give(stack);
@@ -152,8 +187,9 @@ public class Listeners implements Listener {
                 Optional<DrawerBlock> optDrawer = DrawerBlock.fromBlock(block);
                 if (optDrawer.isPresent()) {
                     DrawerBlock drawer = optDrawer.get(); // Checked above
-                    if (drawer.add(event.getItem())) {
-                        // remove the item, but not add it to dest inventory
+                    ItemStack stack = event.getItem();
+                    Optional<ItemStack> overflowOpt = drawer.add(stack);
+                    if (overflowOpt.isEmpty() || !overflowOpt.get().equals(stack)) {
                         event.setItem(new ItemStack(Material.AIR));
                         drawer.saveData();
                         drawer.updateDisplay();
