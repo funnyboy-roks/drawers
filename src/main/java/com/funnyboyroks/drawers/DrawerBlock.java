@@ -46,6 +46,10 @@ public class DrawerBlock {
         return !this.hasType() || this.state.count() == 0;
     }
 
+    public boolean isInfinite() {
+        return this.state.count() == -1;
+    }
+
     // Capacity in _stacks_
     public int capacity() {
         return 32;
@@ -56,6 +60,7 @@ public class DrawerBlock {
     }
 
     public @NotNull Optional<ItemStack> add(ItemStack stack) {
+        if (this.isInfinite()) return Optional.empty();
         if (this.hasType()) {
             if (!stack.isSimilar(this.state.item()) || this.state.count() > this.maxCount()) return Optional.of(stack);
             int newCount = this.state.count() + stack.getAmount();
@@ -80,7 +85,10 @@ public class DrawerBlock {
         int desired = fullStack ? this.state.item().getMaxStackSize() : 1;
         int actual;
         DrawerState nextState;
-        if (this.state.count() > desired) {
+        if (this.isInfinite()) {
+            nextState = this.state;
+            actual = desired;
+        } else if (this.state.count() > desired) {
             nextState = this.state.withCount(this.state.count() - desired);
             actual = desired;
         } else {
@@ -93,9 +101,17 @@ public class DrawerBlock {
         return out;
     }
 
+    private Component displayText() {
+        return switch (this.state.count()) {
+            case -1 -> Component.text("∞");
+            case 0 -> Component.text("Empty").color(NamedTextColor.GRAY);
+            // TODO: More human-readable content (i.e., 4.2k)
+            default -> Component.text(this.state.count());
+        };
+    }
+
     public void updateDisplay() {
-        // TODO: More human-readable content (i.e., 4.2k)
-        this.textDisplay.text(this.state.count() == 0 ? Component.text("Empty").color(NamedTextColor.GRAY) : Component.text(this.state.count()));
+        this.textDisplay.text(this.displayText());
         this.itemDisplay.setItemStack(this.state.item());
     }
 
@@ -168,7 +184,7 @@ public class DrawerBlock {
     }
 
     public void dropContents() {
-        if (this.isEmpty()) return;
+        if (this.isEmpty() || this.isInfinite()) return;
         int stackSize = this.state.item().getMaxStackSize();
         int stacks = this.state.count() / stackSize;
 

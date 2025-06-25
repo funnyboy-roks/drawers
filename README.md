@@ -31,4 +31,4 @@ mvn package
 - [ ] Upgrades (i.e., iron, diamond, etc)
 - [ ] Void Upgrade (cactus)
 - [ ] Upgrade GUI
-- [ ] Infinite drawers
+- [x] Infinite drawers
