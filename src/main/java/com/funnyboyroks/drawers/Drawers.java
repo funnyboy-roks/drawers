@@ -1,23 +1,38 @@
 package com.funnyboyroks.drawers;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.CustomModelData;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
+import com.funnyboyroks.drawers.data.Config;
+import com.funnyboyroks.drawers.data.DataHandler;
+
+import de.exlll.configlib.YamlConfigurations;
 
 public final class Drawers extends JavaPlugin {
 
     private static Drawers INSTANCE;
+    private Config config;
+    private DataHandler dataHandler;
 
     public static Drawers instance() {
         return Drawers.INSTANCE;
+    }
+
+    public static Config config() {
+        return Drawers.instance().config;
+    }
+
+    public static DataHandler dataHandler() {
+        return Drawers.instance().dataHandler;
     }
 
     public Drawers() {
@@ -26,32 +41,43 @@ public final class Drawers extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        Path configPath = Paths.get(this.getDataPath().toString(), "config.yml");
+        this.config = YamlConfigurations.update(configPath, Config.class);
+        this.getLogger().info("Loaded Config");
+
+        this.dataHandler = new DataHandler();
+        try {
+            this.dataHandler.loadData(this);
+        } catch (IOException ex) {
+            this.getLogger().severe("Unable to load plugin data: " + ex);
+            this.getLogger().severe("Disabling plugin");
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
+
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            try {
+                this.dataHandler.saveData();
+            } catch (IOException ex) {
+                this.getLogger().severe("Unable to save plugin data: " + ex);
+            }
+        }, 5 * 60 * 20L, 5 * 60 * 20L); // 5 minutes * 60 seconds * 20 ticks
+
         this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 
         this.addRecipes();
+        this.getLogger().info("Registered Recipes");
     }
 
     public void addRecipes() {
         NamespacedKey key = Util.ns("drawer");
-        ItemStack item = ItemStack.of(Material.BARREL);
-        item.setData(
-            DataComponentTypes.CUSTOM_MODEL_DATA,
-            CustomModelData.customModelData()
-                .addString(Util.ns("barrel").toString())
-                .build()
-        );
 
-        item.editMeta(meta -> {
-            meta.customName(Component.translatable("block.drawers.drawer", "Drawer").decoration(TextDecoration.ITALIC, false));
-        });
-
-        ShapedRecipe recipe = new ShapedRecipe(key, item);
+        ShapedRecipe recipe = new ShapedRecipe(key, Util.drawerItem());
         recipe.shape(
             "AAA",
             "ABA",
             "AAA"
         );
-        recipe.setIngredient('A', Material.OAK_PLANKS);
+        recipe.setIngredient('A', new RecipeChoice.MaterialChoice(Tag.PLANKS));
         recipe.setIngredient('B', Material.CHEST);
 
         this.getServer().addRecipe(recipe);
@@ -59,5 +85,10 @@ public final class Drawers extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        try {
+            this.dataHandler.saveData();
+        } catch (IOException ex) {
+            this.getLogger().severe("Unable to save plugin data: " + ex);
+        }
     }
 }

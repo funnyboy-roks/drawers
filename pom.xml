@@ -70,5 +70,11 @@
             <version>1.21.6-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>de.exlll</groupId>
+            <artifactId>configlib-yaml</artifactId>
+            <version>4.6.1</version>
+        </dependency>
     </dependencies>
 </project>

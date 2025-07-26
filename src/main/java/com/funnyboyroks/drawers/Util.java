@@ -5,16 +5,37 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import io.papermc.paper.entity.PlayerGiveResult;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 
 public class Util {
+    private static final ItemStack DRAWER_ITEM = ItemStack.of(Material.BARREL);
+
+    static {
+        DRAWER_ITEM.setData(
+            DataComponentTypes.CUSTOM_MODEL_DATA,
+            CustomModelData.customModelData()
+                .addString(Util.ns("barrel").toString())
+                .build()
+        );
+
+        DRAWER_ITEM.editMeta(meta -> {
+            meta.customName(Component.translatable("block.drawers.drawer", "Drawer").decoration(TextDecoration.ITALIC, false));
+        });
+    }
+
+    public static ItemStack drawerItem() {
+        return Util.DRAWER_ITEM.clone();
+    }
+
     public static NamespacedKey ns(String key) {
         return NamespacedKey.fromString(key, Drawers.instance());
     }

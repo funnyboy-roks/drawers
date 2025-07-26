@@ -52,7 +52,7 @@ public class DrawerBlock {
 
     // Capacity in _stacks_
     public int capacity() {
-        return 32;
+        return Drawers.config().max_stack_count;
     }
 
     public int maxCount() {
@@ -95,6 +95,7 @@ public class DrawerBlock {
             nextState = new DrawerState();
             actual = this.state.count();
         }
+
         ItemStack out = this.state.item().clone();
         out.setAmount(actual);
         this.state = nextState;
@@ -124,6 +125,9 @@ public class DrawerBlock {
                     "Tried to save data of block that is not a barrel at " + Util.format(block.getLocation()) + ".");
             return;
         }
+
+        Drawers.dataHandler().data.locations.add(this.block.getLocation());
+
         Barrel barrel = (Barrel) this.block.getState();
         PersistentDataContainer pdc = barrel.getPersistentDataContainer();
         pdc.set(Util.ns("is_drawer"), PersistentDataType.BOOLEAN, true);
@@ -197,6 +201,9 @@ public class DrawerBlock {
         if (this.state.count() % stackSize != 0) {
             this.block.getWorld().dropItemNaturally(summonAt, fullStack.asQuantity(this.state.count() % stackSize));
         }
+
+        // TODO: have a function that will remove everything associated with the drawers
+        Drawers.dataHandler().data.locations.remove(this.block.getLocation());
     }
 
     public static record DrawerState(@Nullable ItemStack item, int count, boolean voidExcess) {
@@ -214,9 +221,13 @@ public class DrawerBlock {
 
         public void toPdc(@NotNull PersistentDataContainer pdc) {
             // TODO: Better itemstack ser/de
-            if (this.item() != null) pdc.set(Util.ns("item_stack"), PersistentDataType.BYTE_ARRAY, this.item().serializeAsBytes());
-            if (this.count() != 0) pdc.set(Util.ns("count"), PersistentDataType.INTEGER, this.count());
-            if (this.voidExcess()) pdc.set(Util.ns("void"), PersistentDataType.BOOLEAN, true);
+            if (this.item() == null) pdc.remove(Util.ns("item_stack"));
+            else pdc.set(Util.ns("item_stack"), PersistentDataType.BYTE_ARRAY, this.item().serializeAsBytes());
+
+            if (this.count() == 0) pdc.remove(Util.ns("count"));
+            else  pdc.set(Util.ns("count"), PersistentDataType.INTEGER, this.count());
+
+            pdc.set(Util.ns("void"), PersistentDataType.BOOLEAN, this.voidExcess());
         }
 
         public static @NotNull DrawerState fromPdc(@NotNull PersistentDataContainer pdc) {

@@ -4,9 +4,11 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Display.Brightness;
 import org.bukkit.entity.ItemDisplay;
@@ -46,8 +48,8 @@ public class Listeners implements Listener {
         new AxisAngle4f(0.5f * (float)Math.PI, 0f, 1f, 0f), // EAST
         new AxisAngle4f(0f, 0f, 0f, 0f), // SOUTH
         new AxisAngle4f(-0.5f * (float)Math.PI, 0f, 1f, 0f), // WEST
-        new AxisAngle4f(-0.5f * (float)Math.PI, 1f, 0f, 0f), // UP
-        new AxisAngle4f(0.5f * (float)Math.PI, 1f, 0f, 0f), // DOWN
+        new AxisAngle4f(0.5f * (float)Math.PI, 1f, 0f, 0f), // UP
+        new AxisAngle4f(-0.5f * (float)Math.PI, 1f, 0f, 0f), // DOWN
     };
 
     @EventHandler
@@ -60,11 +62,8 @@ public class Listeners implements Listener {
         if (modelData == null || !modelData.strings().contains(Util.ns("barrel").toString())) return;
 
         Directional dir = (Directional) block.getBlockData();
-        // TODO: Perhaps set open when the drawer has an item
 
         ItemDisplay item = block.getWorld().spawn(block.getLocation().add(0.5, 0.5, 0.5), ItemDisplay.class, entity -> {
-            // entity.setItemStack(event.getPlayer().getInventory().getItemInOffHand());
-            // TODO: entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             entity.setBrightness(new Brightness(15, 15));
 
             entity.setTransformationMatrix(
@@ -82,16 +81,20 @@ public class Listeners implements Listener {
         });
 
         TextDisplay text = block.getWorld().spawn(block.getLocation().add(0.5, 0.5, 0.5), TextDisplay.class, entity -> {
-            // entity.text(Component.text("Empty"));
             entity.setBrightness(new Brightness(15, 15));
             entity.setBackgroundColor(org.bukkit.Color.fromARGB(0));
 
-            entity.setTransformationMatrix(
-                new Matrix4f()
-                    .rotate(OPPOSING_ANGLES[dir.getFacing().ordinal()])
-                    .translate(0f, -6f/16f, 0.5f)
-                    .scale(0.75f)
-            );
+            Matrix4f transformation = new Matrix4f()
+                .rotate(OPPOSING_ANGLES[dir.getFacing().ordinal()]);
+
+            if (dir.getFacing().getModY() != 0) {
+                transformation = transformation.rotate((float)Math.PI, 0f, 1f, 0f);
+            }
+
+            transformation = transformation.translate(0f, -6f/16f, 0.5f)
+                .scale(0.75f);
+
+            entity.setTransformationMatrix(transformation);
         });
 
         DrawerBlock drawer = new DrawerBlock(block, item, text, new DrawerBlock.DrawerState());
@@ -108,6 +111,12 @@ public class Listeners implements Listener {
         if (optDrawer.isEmpty()) return;
         DrawerBlock drawer = optDrawer.get(); // Checked above
         drawer.dropContents();
+
+        // Change block drop
+        if (event.isDropItems()) {
+            event.setDropItems(false);
+            drawer.block.getWorld().dropItemNaturally(drawer.block.getLocation().clone().add(0.5, 0.5, 0.5), Util.drawerItem());
+        }
 
         Util.tryRemoveEntity(drawer.itemDisplay);
         Util.tryRemoveEntity(drawer.textDisplay);
@@ -137,6 +146,10 @@ public class Listeners implements Listener {
             if (optDrawer.isEmpty()) return;
             DrawerBlock drawer = optDrawer.get(); // Checked above
             drawer.dropContents();
+            block.setType(Material.AIR);
+            if (event.getExplosionResult() == ExplosionResult.DESTROY || event.getExplosionResult() == ExplosionResult.DESTROY_WITH_DECAY) {
+                drawer.block.getWorld().dropItemNaturally(drawer.block.getLocation().clone().add(0.5, 0.5, 0.5), Util.drawerItem());
+            }
 
             Util.tryRemoveEntity(drawer.itemDisplay);
             Util.tryRemoveEntity(drawer.textDisplay);
@@ -156,7 +169,6 @@ public class Listeners implements Listener {
             ItemStack is = event.getItem();
             if (event.getPlayer().isSneaking() && is != null) return;
             // add a single item
-            // TODO: drawer max capacity
             if (event.getBlockFace() == drawer.getBlockData().getFacing() && is != null) {
                 Optional<ItemStack> overflowOpt = drawer.add(is);
                 event.getPlayer().getInventory().setItem(event.getHand(), overflowOpt.isPresent() ? overflowOpt.get() : null);
