@@ -17,14 +17,16 @@ public class Lang {
     public String empty = "<gray>Empty</gray>";
     @Comment("'%d' is replaced by the quantity of items in the drawer")
     public String quantity = "%d";
+    public String item_name = "Drawer";
 
     @Override
     public String toString() {
         return "Config[" +
             Arrays.stream(new String[][]{
-                { "infinite", this.infinite },
-                { "empty",    this.empty    },
-                { "quantity", this.quantity },
+                { "infinite",  this.infinite },
+                { "empty",     this.empty    },
+                { "quantity",  this.quantity },
+                { "item_name", this.item_name },
             })
             .map(s -> s[0] + "='" + s[1] + "'")
             .collect(Collectors.joining(","))

@@ -79,18 +79,7 @@ public final class Drawers extends JavaPlugin {
     }
 
     public void addRecipes() {
-        NamespacedKey key = Util.ns("drawer");
-
-        ShapedRecipe recipe = new ShapedRecipe(key, Util.drawerItem());
-        recipe.shape(
-            "AAA",
-            "ABA",
-            "AAA"
-        );
-        recipe.setIngredient('A', new RecipeChoice.MaterialChoice(Tag.PLANKS));
-        recipe.setIngredient('B', Material.CHEST);
-
-        this.getServer().addRecipe(recipe);
+        this.getServer().addRecipe(this.config.drawer_recipe.recipe(Util.ns("drawer_recipe")));
     }
 
     @Override
