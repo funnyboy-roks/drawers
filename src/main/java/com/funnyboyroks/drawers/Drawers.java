@@ -14,6 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.funnyboyroks.drawers.data.Config;
 import com.funnyboyroks.drawers.data.DataHandler;
+import com.funnyboyroks.drawers.data.Lang;
 
 import de.exlll.configlib.YamlConfigurations;
 
@@ -21,6 +22,7 @@ public final class Drawers extends JavaPlugin {
 
     private static Drawers INSTANCE;
     private Config config;
+    private Lang lang;
     private DataHandler dataHandler;
 
     public static Drawers instance() {
@@ -29,6 +31,10 @@ public final class Drawers extends JavaPlugin {
 
     public static Config config() {
         return Drawers.instance().config;
+    }
+
+    public static Lang lang() {
+        return Drawers.instance().lang;
     }
 
     public static DataHandler dataHandler() {
@@ -43,6 +49,10 @@ public final class Drawers extends JavaPlugin {
     public void onEnable() {
         Path configPath = Paths.get(this.getDataPath().toString(), "config.yml");
         this.config = YamlConfigurations.update(configPath, Config.class);
+
+        Path langPath = Paths.get(this.getDataPath().toString(), "lang.yml");
+        this.lang = YamlConfigurations.update(langPath, Lang.class);
+
         this.getLogger().info("Loaded Config");
 
         this.dataHandler = new DataHandler();
