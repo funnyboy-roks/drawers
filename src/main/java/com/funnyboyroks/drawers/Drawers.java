@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.funnyboyroks.drawers.data.Config;
 import com.funnyboyroks.drawers.data.DataHandler;
 import com.funnyboyroks.drawers.data.Lang;
+import com.funnyboyroks.drawers.commands.DrawersCommand;
 
 import de.exlll.configlib.YamlConfigurations;
 
@@ -73,6 +74,8 @@ public final class Drawers extends JavaPlugin {
         }, 5 * 60 * 20L, 5 * 60 * 20L); // 5 minutes * 60 seconds * 20 ticks
 
         this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+
+        getCommand("drawers").setExecutor(new DrawersCommand(this));
 
         this.addRecipes();
         this.getLogger().info("Registered Recipes");
