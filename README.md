@@ -20,7 +20,7 @@ that get generated when the server starts.
 To get started, craft a drawer by surrounding a chest with planks of any
 kind in the crafting table:
 
-![Crafting recipe](https://raw.githubusercontent.com/funnyboy-roks/drawers/refs/heads/main/img/recipe.png)
+![Crafting recipe](https://raw.githubusercontent.com/funnyboy-roks/drawers/refs/heads/main/img/recipe.gif)
 
 > Note: This recipe can be configured
 
