@@ -1,0 +1,15 @@
+name: modrinth-desc
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'README.md' ]
+jobs:
+  modrinth-desc:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: actions/checkout@v5
+    - uses: funnyboy-roks/modrinth-auto-desc@main
+      with:
+        auth-token: ${{ secrets.MODRINTH_AUTH_TOKEN }}
+        slug: 'drawers'
