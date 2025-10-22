@@ -33,6 +33,8 @@ You can now add more items by right clicking with them in your hand and
 remove items by left clicking to take one, or shift lift click to take a
 full stack.
 
+<!-- MODRINTH_EXCLUDE_START -->
+
 ## Development
 
 To build the plugin, run
@@ -40,3 +42,5 @@ To build the plugin, run
 ```sh
 mvn package
 ```
+
+<!-- MODRINTH_EXCLUDE_END -->
