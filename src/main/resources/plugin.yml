@@ -3,3 +3,24 @@ version: '${project.version}'
 main: com.funnyboyroks.drawers.Drawers
 api-version: 1.19
 authors: [funnyboy_roks]
+
+commands:
+  drawers:
+    description: "Admin: manage drawers (nearby, remove, infinite)"
+    usage: "/drawers <nearby|remove|infinite> [args]"
+    permission: drawers.command.drawers
+    permission-message: "You don't have permission to use that command."
+
+permissions:
+  drawers.command.drawers:
+    description: Allows running the drawers admin command
+    default: op
+  drawers.command.drawers.nearby:
+    description: Allows using /drawers nearby
+    default: op
+  drawers.command.drawers.remove:
+    description: Allows using /drawers remove
+    default: op
+  drawers.command.drawers.infinite:
+    description: Allows using /drawers infinite
+    default: op
