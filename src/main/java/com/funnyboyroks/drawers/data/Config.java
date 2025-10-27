@@ -40,6 +40,11 @@ public class Config {
     })
     public RecipeConfig drawer_recipe = new RecipeConfig();
 
+    @Comment({
+        "The amount of ticks for a second click to register as a double-click"
+    })
+    public int double_click_max_ticks_delay = 10;
+
     @Override
     public String toString() {
         return "Config[max_stack_count=%d]".formatted(this.max_stack_count);

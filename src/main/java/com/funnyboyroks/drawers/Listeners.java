@@ -1,7 +1,10 @@
 package com.funnyboyroks.drawers;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ExplosionResult;
@@ -25,6 +28,7 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -51,6 +55,8 @@ public class Listeners implements Listener {
         new AxisAngle4f(0.5f * (float)Math.PI, 1f, 0f, 0f), // UP
         new AxisAngle4f(-0.5f * (float)Math.PI, 1f, 0f, 0f), // DOWN
     };
+
+    private static final Map<UUID, Integer> lastClickedTick = new HashMap<>();
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -168,12 +174,43 @@ public class Listeners implements Listener {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack is = event.getItem();
             if (event.getPlayer().isSneaking() && is != null) return;
-            // add a single item
-            if (event.getBlockFace() == drawer.getBlockData().getFacing() && is != null) {
-                Optional<ItemStack> overflowOpt = drawer.add(is);
-                event.getPlayer().getInventory().setItem(event.getHand(), overflowOpt.isPresent() ? overflowOpt.get() : null);
-                drawer.saveData();
-                drawer.updateDisplay();
+            if (event.getBlockFace() == drawer.getBlockData().getFacing()) {
+                UUID playerId = event.getPlayer().getUniqueId();
+                if (!lastClickedTick.containsKey(playerId)) {
+                    // First click; add a single item
+                    if (is != null) {
+                        Optional<ItemStack> overflowOpt = drawer.add(is);
+                        event.getPlayer().getInventory().setItem(event.getHand(), overflowOpt.isPresent() ? overflowOpt.get() : null);
+                        drawer.saveData();
+                        drawer.updateDisplay();
+                    }
+
+                    BukkitTask task = event.getPlayer().getServer().getScheduler().runTaskLater(Drawers.instance(),
+                            () -> lastClickedTick.remove(playerId), Drawers.config().double_click_max_ticks_delay);
+                    lastClickedTick.put(playerId, task.getTaskId());
+                } else {
+                    // Double-click; insert all matching items from the player's inventory to the drawer
+                    if (drawer.hasType()) {
+                        int remainingCount = drawer.maxCount() - drawer.state.count();
+                        if (remainingCount > 0) {
+                            // Items can still be inserted
+                            assert drawer.state.item() != null; // This cannot not be null at this point
+                            ItemStack requestStack = drawer.state.item().asQuantity(remainingCount);
+                            HashMap<Integer, ItemStack> leftoverRequest = event.getPlayer().getInventory().removeItem(requestStack);
+                            if (!leftoverRequest.isEmpty()) {
+                                // We did not pull as much as we requested
+                                ItemStack leftoverRequestStack = leftoverRequest.values().iterator().next();
+                                requestStack.setAmount(remainingCount - leftoverRequestStack.getAmount());
+                            }
+                            drawer.add(requestStack);// There should be no left-over here
+                            drawer.saveData();
+                            drawer.updateDisplay();
+                        }
+                    }
+
+                    Integer taskId = lastClickedTick.remove(playerId);
+                    event.getPlayer().getServer().getScheduler().cancelTask(taskId);
+                }
             }
             event.setCancelled(true);
         } else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
