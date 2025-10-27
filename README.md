@@ -31,7 +31,8 @@ click the front.
 
 You can now add more items by right clicking with them in your hand and
 remove items by left clicking to take one, or shift lift click to take a
-full stack.
+full stack. Double-right click to add all matching items from your
+inventory.
 
 <!-- MODRINTH_EXCLUDE_START -->
 
