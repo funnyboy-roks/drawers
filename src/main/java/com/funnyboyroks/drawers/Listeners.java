@@ -11,7 +11,6 @@ import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Display.Brightness;
 import org.bukkit.entity.ItemDisplay;
@@ -56,7 +55,17 @@ public class Listeners implements Listener {
         new AxisAngle4f(-0.5f * (float)Math.PI, 1f, 0f, 0f), // DOWN
     };
 
-    private static final Map<UUID, Integer> lastClickedTick = new HashMap<>();
+    private static final Map<UUID, PotentialDoubleClick> lastClickedTick = new HashMap<>();
+
+    record PotentialDoubleClick(int x, int y, int z, int taskId) {
+        public PotentialDoubleClick(Block block, int taskId) {
+            this(block.getX(), block.getY(), block.getZ(), taskId);
+        }
+
+        public boolean matchesPosition(Block block) {
+            return this.x == block.getX() && this.y == block.getY() && this.z == block.getZ();
+        }
+    }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -176,7 +185,18 @@ public class Listeners implements Listener {
             if (event.getPlayer().isSneaking() && is != null) return;
             if (event.getBlockFace() == drawer.getBlockData().getFacing()) {
                 UUID playerId = event.getPlayer().getUniqueId();
-                if (!lastClickedTick.containsKey(playerId)) {
+                PotentialDoubleClick storedClick = lastClickedTick.remove(playerId);
+
+                if (storedClick != null) {
+                    // Always cancel the task; we're handling it anyway
+                    event.getPlayer().getServer().getScheduler().cancelTask(storedClick.taskId);
+                    if (!storedClick.matchesPosition(block)) {
+                        // Invalidate the stored click
+                        storedClick = null;
+                    }
+                }
+
+                if (storedClick == null) {
                     // First click; add a single item
                     if (is != null) {
                         Optional<ItemStack> overflowOpt = drawer.add(is);
@@ -187,7 +207,7 @@ public class Listeners implements Listener {
 
                     BukkitTask task = event.getPlayer().getServer().getScheduler().runTaskLater(Drawers.instance(),
                             () -> lastClickedTick.remove(playerId), Drawers.config().double_click_max_ticks_delay);
-                    lastClickedTick.put(playerId, task.getTaskId());
+                    lastClickedTick.put(playerId, new PotentialDoubleClick(block, task.getTaskId()));
                 } else {
                     // Double-click; insert all matching items from the player's inventory to the drawer
                     if (drawer.hasType()) {
@@ -207,9 +227,6 @@ public class Listeners implements Listener {
                             drawer.updateDisplay();
                         }
                     }
-
-                    Integer taskId = lastClickedTick.remove(playerId);
-                    event.getPlayer().getServer().getScheduler().cancelTask(taskId);
                 }
             }
             event.setCancelled(true);
