@@ -16,7 +16,6 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class Util {
     private static ItemStack DRAWER_ITEM = null;
@@ -36,8 +35,7 @@ public class Util {
                     Component.translatable(
                         "block.drawers.drawer",
                         "%s",
-                        MiniMessage.builder().build()
-                            .deserialize(Drawers.lang().item_name)
+                        Drawers.lang().item_name
                     )
                     .decoration(TextDecoration.ITALIC, false)
                 );

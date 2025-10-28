@@ -1,10 +1,11 @@
 package com.funnyboyroks.drawers.data;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import com.funnyboyroks.drawers.MMComponent;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 @Configuration
 public class Lang {
@@ -13,23 +14,12 @@ public class Lang {
         "Configure the text that is displayed on the drawer.  Most fields support MiniMessage (https://docs.advntr.dev/minimessage/format.html)",
         ""
     })
-    public String infinite = "∞";
-    public String empty = "<gray>Empty</gray>";
-    @Comment("'%d' is replaced by the quantity of items in the drawer")
-    public String quantity = "%d";
-    public String item_name = "Drawer";
-
-    @Override
-    public String toString() {
-        return "Config[" +
-            Arrays.stream(new String[][]{
-                { "infinite",  this.infinite },
-                { "empty",     this.empty    },
-                { "quantity",  this.quantity },
-                { "item_name", this.item_name },
-            })
-            .map(s -> s[0] + "='" + s[1] + "'")
-            .collect(Collectors.joining(","))
-        + "]";
-    }
+    public Component infinite = Component.text("∞");
+    public Component empty = Component.text("Empty").color(NamedTextColor.GRAY);
+    @Comment({
+        "'<quantity>' is replaced by the quantity of items in the drawer.",
+        "See this for styling info: https://docs.papermc.io/adventure/minimessage/dynamic-replacements/#insert-a-number",
+    })
+    public MMComponent quantity = MMComponent.parsed("<quantity>");
+    public Component item_name = Component.text("Drawer");
 }

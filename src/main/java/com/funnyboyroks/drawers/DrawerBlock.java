@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 public class DrawerBlock {
     public Block block;
@@ -105,10 +107,11 @@ public class DrawerBlock {
 
     private Component displayText() {
         return switch (this.state.count()) {
-            case -1 -> MiniMessage.builder().build().deserialize(Drawers.lang().infinite);
-            case 0 -> MiniMessage.builder().build().deserialize(Drawers.lang().empty);
+            case -1 -> Drawers.lang().infinite;
+            case 0 -> Drawers.lang().empty;
             // TODO: More human-readable content (i.e., 4.2k)
-            default -> MiniMessage.builder().build().deserialize(Drawers.lang().quantity.formatted(this.state.count()));
+            default -> Drawers.lang().quantity
+                .toComponent(Formatter.number("quantity", this.state.count()));
         };
     }
 

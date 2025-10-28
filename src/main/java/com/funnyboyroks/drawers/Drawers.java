@@ -5,18 +5,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Tag;
-import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.funnyboyroks.drawers.data.Config;
 import com.funnyboyroks.drawers.data.DataHandler;
 import com.funnyboyroks.drawers.data.Lang;
 
+import de.exlll.configlib.Serializer;
 import de.exlll.configlib.YamlConfigurations;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public final class Drawers extends JavaPlugin {
 
@@ -51,7 +49,26 @@ public final class Drawers extends JavaPlugin {
         this.config = YamlConfigurations.update(configPath, Config.class);
 
         Path langPath = Paths.get(this.getDataPath().toString(), "lang.yml");
-        this.lang = YamlConfigurations.update(langPath, Lang.class);
+        this.lang = YamlConfigurations.update(
+            langPath,
+            Lang.class,
+            c -> c
+                .addSerializer(MMComponent.class, new MMComponent.Serializer())
+                .addSerializer(Component.class, new Serializer<Component, String>() {
+                    @Override
+                    public Component deserialize(String s) {
+                        return MiniMessage.miniMessage().deserialize(s);
+                    }
+
+                    @Override
+                    public String serialize(Component c) {
+                        return MiniMessage.builder()
+                            .strict(true)
+                            .build()
+                            .serialize(c);
+                    }
+                })
+        );
 
         this.getLogger().info("Loaded Config");
 
