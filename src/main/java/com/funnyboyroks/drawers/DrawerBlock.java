@@ -216,7 +216,7 @@ public class DrawerBlock {
         }
 
         public DrawerState withCount(int count) {
-            return new DrawerState(this.item(), count, this.voidExcess());
+            return new DrawerState(count == 0 ? null : this.item(), count, this.voidExcess());
         }
 
         public DrawerState withItem(@Nullable ItemStack stack) {

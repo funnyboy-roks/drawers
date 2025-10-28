@@ -61,6 +61,10 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -75,6 +79,12 @@
             <groupId>de.exlll</groupId>
             <artifactId>configlib-yaml</artifactId>
             <version>4.6.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.FarLandsMC</groupId>
+            <artifactId>ComponentUtils</artifactId>
+            <version>main-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
