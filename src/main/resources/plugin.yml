@@ -3,3 +3,17 @@ version: '${project.version}'
 main: com.funnyboyroks.drawers.Drawers
 api-version: 1.19
 authors: [funnyboy_roks]
+permissions:
+  drawers.command:
+    description: "Ability to run the /drawers command"
+    default: op
+    children:
+      drawers.command.nearby:
+        description: "Ability to run /drawers nearby"
+        default: op
+      drawers.command.set-count:
+        description: "Ability to run /drawers set-count or /drawers infinite"
+        default: op
+      drawers.command.reload:
+        description: "Ability to run /drawers reload"
+        default: op
