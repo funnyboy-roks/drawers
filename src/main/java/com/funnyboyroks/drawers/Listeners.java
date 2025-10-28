@@ -55,10 +55,10 @@ public class Listeners implements Listener {
         new AxisAngle4f(-0.5f * (float)Math.PI, 1f, 0f, 0f), // DOWN
     };
 
-    private static final Map<UUID, PotentialDoubleClick> lastClickedTick = new HashMap<>();
+    private static final Map<UUID, PendingDoubleClick> lastClickedTick = new HashMap<>();
 
-    record PotentialDoubleClick(int x, int y, int z, int taskId) {
-        public PotentialDoubleClick(Block block, int taskId) {
+    record PendingDoubleClick(int x, int y, int z, BukkitTask task) {
+        public PendingDoubleClick(Block block, BukkitTask taskId) {
             this(block.getX(), block.getY(), block.getZ(), taskId);
         }
 
@@ -185,11 +185,11 @@ public class Listeners implements Listener {
             if (event.getPlayer().isSneaking() && is != null) return;
             if (event.getBlockFace() == drawer.getBlockData().getFacing()) {
                 UUID playerId = event.getPlayer().getUniqueId();
-                PotentialDoubleClick storedClick = lastClickedTick.remove(playerId);
+                PendingDoubleClick storedClick = lastClickedTick.remove(playerId);
 
                 if (storedClick != null) {
                     // Always cancel the task; we're handling it anyway
-                    event.getPlayer().getServer().getScheduler().cancelTask(storedClick.taskId);
+                    storedClick.task.cancel();
                     if (!storedClick.matchesPosition(block)) {
                         // Invalidate the stored click
                         storedClick = null;
@@ -205,27 +205,25 @@ public class Listeners implements Listener {
                         drawer.updateDisplay();
                     }
 
-                    BukkitTask task = event.getPlayer().getServer().getScheduler().runTaskLater(Drawers.instance(),
+                    BukkitTask task = Bukkit.getScheduler().runTaskLater(Drawers.instance(),
                             () -> lastClickedTick.remove(playerId), Drawers.config().double_click_max_ticks_delay);
-                    lastClickedTick.put(playerId, new PotentialDoubleClick(block, task.getTaskId()));
-                } else {
+                    lastClickedTick.put(playerId, new PendingDoubleClick(block, task));
+                } else if (drawer.hasType()) {
                     // Double-click; insert all matching items from the player's inventory to the drawer
-                    if (drawer.hasType()) {
-                        int remainingCount = drawer.maxCount() - drawer.state.count();
-                        if (remainingCount > 0) {
-                            // Items can still be inserted
-                            assert drawer.state.item() != null; // This cannot not be null at this point
-                            ItemStack requestStack = drawer.state.item().asQuantity(remainingCount);
-                            HashMap<Integer, ItemStack> leftoverRequest = event.getPlayer().getInventory().removeItem(requestStack);
-                            if (!leftoverRequest.isEmpty()) {
-                                // We did not pull as much as we requested
-                                ItemStack leftoverRequestStack = leftoverRequest.values().iterator().next();
-                                requestStack.setAmount(remainingCount - leftoverRequestStack.getAmount());
-                            }
-                            drawer.add(requestStack);// There should be no left-over here
-                            drawer.saveData();
-                            drawer.updateDisplay();
+                    int remainingCount = drawer.maxCount() - drawer.state.count();
+                    if (remainingCount > 0) {
+                        // Items can still be inserted
+                        assert drawer.state.item() != null; // This cannot not be null at this point
+                        ItemStack requestStack = drawer.state.item().asQuantity(remainingCount);
+                        HashMap<Integer, ItemStack> leftoverRequest = event.getPlayer().getInventory().removeItem(requestStack);
+                        if (!leftoverRequest.isEmpty()) {
+                            // We did not pull as much as we requested
+                            ItemStack leftoverRequestStack = leftoverRequest.values().iterator().next();
+                            requestStack.setAmount(remainingCount - leftoverRequestStack.getAmount());
                         }
+                        drawer.add(requestStack);// There should be no left-over here
+                        drawer.saveData();
+                        drawer.updateDisplay();
                     }
                 }
             }
