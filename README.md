@@ -29,10 +29,11 @@ Once you have the drawer, place it down (places like a barrel).
 Holding the stack of items that you wish to place into the drawer, right
 click the front.
 
-You can now add more items by right clicking with them in your hand and
-remove items by left clicking to take one, or shift lift click to take a
-full stack. Double-right click to add all matching items from your
-inventory.
+You can now interact with the drawer by doing the following:
+- right click - add the item in your hand
+- double right click - add all matching items in your inventory
+- left click - remove a single item
+- sneak + left click - remove a full stack of the item
 
 <!-- MODRINTH_EXCLUDE_START -->
 
