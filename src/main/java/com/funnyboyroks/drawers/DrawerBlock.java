@@ -63,7 +63,14 @@ public class DrawerBlock {
     }
 
     public @NotNull Optional<ItemStack> add(ItemStack stack) {
-        if (this.isInfinite()) return Optional.empty();
+        if (this.isInfinite()) {
+            if (!this.hasType()) {
+                this.state = this.state.withItem(stack.clone());
+                return Optional.empty();
+            }
+            if (!stack.isSimilar(this.state.item())) return Optional.of(stack);
+            return Optional.empty();
+        }
         if (this.hasType()) {
             if (!stack.isSimilar(this.state.item()) || this.state.count() > this.maxCount()) return Optional.of(stack);
             int newCount = this.state.count() + stack.getAmount();
